@@ -1,0 +1,237 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-color: #fadb14;
+  /* Vibrant Anime Yellow */
+  --primary-light: #fffb8f;
+  --primary-gradient: linear-gradient(135deg, #fadb14 0%, #ffec3d 100%);
+  --bg-dark: #000000;
+  --bg-card: #141414;
+  --glass-bg: rgba(20, 20, 20, 0.8);
+  --glass-border: rgba(250, 219, 20, 0.4);
+  --text-primary: #ffffff;
+  --text-secondary: #bfbfbf;
+  --accent-color: #ff4d4f;
+  /* Anime Pop Red */
+  --transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* Snappier Anime Transition */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid var(--glass-border);
+  border-radius: 8px;
+  /* Sharper corners for anime look */
+}
+
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 3px solid var(--glass-border);
+  /* Thicker border */
+  border-radius: 12px;
+  box-shadow: 8px 8px 0px 0px rgba(250, 219, 20, 0.2);
+  /* Anime-style block shadow */
+  transition: var(--transition);
+}
+
+.glass-card:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 12px 12px 0px 0px rgba(250, 219, 20, 0.3);
+  border-color: var(--primary-color);
+}
+
+.gradient-text {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+}
+
+/* Ant Design Overrides */
+.ant-layout {
+  background: transparent !important;
+}
+
+.ant-layout-sider {
+  background: var(--bg-card) !important;
+  border-right: 1px solid var(--glass-border);
+}
+
+.ant-menu {
+  background: transparent !important;
+  border-inline-end: none !important;
+}
+
+.ant-btn-primary {
+  background: var(--primary-color) !important;
+  color: #000 !important;
+  /* Black text on yellow button */
+  border: 2px solid #000 !important;
+  /* Bold outline */
+  height: 44px;
+  border-radius: 8px;
+  font-weight: 700;
+  box-shadow: 4px 4px 0px #000;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ant-btn-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000;
+  background: var(--primary-light) !important;
+}
+
+.ant-btn-primary:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* Anime Styled Tabs */
+.anime-tabs .ant-tabs-nav::before {
+  border-bottom: 2px solid var(--glass-border) !important;
+}
+
+.anime-tabs .ant-tabs-tab {
+  background: #141414 !important;
+  border: 2px solid var(--glass-border) !important;
+  border-bottom: none !important;
+  margin-right: 8px !important;
+  transition: var(--transition) !important;
+}
+
+.anime-tabs .ant-tabs-tab-active {
+  background: var(--primary-color) !important;
+  border-color: #000 !important;
+}
+
+.anime-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #000 !important;
+  font-weight: 800;
+}
+
+.anime-tabs .ant-tabs-tab:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-color) !important;
+}
+
+/* Hover Zoom Effect */
+.hover-zoom {
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.glass-card:hover .hover-zoom {
+  transform: scale(1.1) rotate(2deg);
+}
+
+/* Anime Modal Styling */
+.anime-modal .ant-modal-content {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.anime-modal .ant-modal-header {
+  background: var(--primary-color) !important;
+  border: 3px solid #000 !important;
+  border-bottom: none !important;
+  padding: 16px 24px !important;
+}
+
+.anime-modal .ant-modal-title {
+  color: #000 !important;
+  font-weight: 900 !important;
+  letter-spacing: -1px;
+  font-style: italic;
+  text-transform: uppercase;
+}
+
+.anime-modal .ant-modal-close-x {
+  color: #000 !important;
+}
+
+/* Inventory Matrix Sticky Header Support */
+.inventory-matrix .ant-table-header {
+  background: #141414 !important;
+}
+
+.inventory-matrix .ant-table-thead>tr>th {
+  background: #141414 !important;
+  border-bottom: 2px solid #333 !important;
+  z-index: 10 !important;
+}
+
+.inventory-matrix .ant-table-cell-fix-left,
+.inventory-matrix .ant-table-cell-fix-right {
+  background: #141414 !important;
+  z-index: 11 !important;
+}
+
+.inventory-matrix .ant-table-thead>tr>th.ant-table-cell-fix-left,
+.inventory-matrix .ant-table-thead>tr>th.ant-table-cell-fix-right {
+  z-index: 12 !important;
+}
+
+.inventory-matrix .ant-table-tbody>tr:hover>td {
+  background: rgba(250, 219, 20, 0.1) !important;
+}
+
+.inventory-matrix .ant-table-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) #141414;
+}
