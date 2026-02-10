@@ -55,8 +55,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 });
-app.listen(3000, '0.0.0.0', () => {
-  console.log('Server running on http://0.0.0.0:3000')
-})
+// app.listen(3000, '0.0.0.0', () => {
+//   console.log('Server running on http://0.0.0.0:3000')
+// })
 
 export default app;

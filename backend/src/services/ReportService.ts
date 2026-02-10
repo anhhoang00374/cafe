@@ -1,4 +1,5 @@
 import Order from '../models/Order.js';
+import Payment from '../models/Payment.js';
 import ImportItem from '../models/ImportItem.js';
 import ProfitCycle from '../models/ProfitCycle.js';
 import { Op } from 'sequelize';
@@ -9,19 +10,15 @@ export class ReportService {
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
 
-        const revenueToday = await Order.sum('final_total', {
+        // Use Payment.createdAt as the payment time
+        const payments = await Payment.findAll({
             where: {
-                status: 'completed',
                 createdAt: { [Op.gte]: todayStart }
             }
         });
 
-        const ordersTodayCount = await Order.count({
-            where: {
-                status: 'completed',
-                createdAt: { [Op.gte]: todayStart }
-            }
-        });
+        const revenueToday = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+        const ordersTodayCount = payments.length;
 
         return {
             revenueToday: revenueToday || 0,

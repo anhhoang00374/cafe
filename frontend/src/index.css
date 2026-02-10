@@ -29,7 +29,11 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  overflow-x: hidden;
+  /* overflow-x: hidden; Removed to allow layout to handle scroll */
+}
+
+#root {
+  height: 100vh;
 }
 
 /* Scrollbar Styling */

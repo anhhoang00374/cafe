@@ -51,6 +51,24 @@ export class OrderController {
         }
     }
 
+    async markServed(req: Request, res: Response) {
+        try {
+            await orderService.markAsServed(Number(req.params.id));
+            res.status(200).json({ message: 'Order served' });
+        } catch (error: any) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+
+    async cancelOrder(req: Request, res: Response) {
+        try {
+            await orderService.cancelOrder(Number(req.params.id));
+            res.status(200).json({ message: 'Order cancelled' });
+        } catch (error: any) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+
     async update(req: Request, res: Response) {
         try {
             const order = await orderService.update(Number(req.params.id), req.body);

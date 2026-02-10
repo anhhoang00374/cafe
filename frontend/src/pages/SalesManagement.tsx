@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
     Row, Col, Card, Button, Modal, Form,
     Input, Space, Typography, Tag, message,
-    Empty, Spin, InputNumber, Divider
+    Empty, Spin, InputNumber, Divider, Grid, Select
 } from 'antd';
 import {
     PlusOutlined,
@@ -14,7 +14,8 @@ import {
     DeleteOutlined,
     UserOutlined,
     DatabaseOutlined,
-    ShoppingOutlined
+    ShoppingOutlined,
+    DollarOutlined
 } from '@ant-design/icons';
 import api from '../api';
 import dayjs from 'dayjs';
@@ -32,6 +33,7 @@ const SalesManagement: React.FC = () => {
     const [form] = Form.useForm();
     const [orderItems, setOrderItems] = useState<any[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+    const screens = Grid.useBreakpoint();
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -43,11 +45,13 @@ const SalesManagement: React.FC = () => {
             ]);
 
             const rawOrders = Array.isArray(orderRes.data) ? orderRes.data : [];
-            // Sort: pending first, then newest
+            // Sort: unpaid (pending/served) first, then paid/cancelled; oldest first within group
+            const isUnpaid = (s: string) => s === 'pending' || s === 'served';
             const sorted = [...rawOrders].sort((a, b) => {
-                if (a.status === 'pending' && b.status !== 'pending') return -1;
-                if (a.status !== 'pending' && b.status === 'pending') return 1;
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                const aUp = isUnpaid(a.status) ? 0 : 1;
+                const bUp = isUnpaid(b.status) ? 0 : 1;
+                if (aUp !== bUp) return aUp - bUp;
+                return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
             });
 
             setOrders(sorted);
@@ -80,6 +84,44 @@ const SalesManagement: React.FC = () => {
         setCurrentOrder(order);
         setOrderItems(order.items || []);
         setIsDetailModalVisible(true);
+    };
+
+    const handleCancelOrder = async (orderId: number) => {
+        Modal.confirm({
+            title: 'Hủy đơn hàng',
+            content: 'Dữ liệu sẽ không được tính vào doanh thu. Tiếp tục?',
+            okText: 'HỦY ĐƠN',
+            okType: 'danger',
+            cancelText: 'QUAY LẠI',
+            onOk: async () => {
+                try {
+                    await api.post(`/orders/${orderId}/cancel`);
+                    message.success('Đã hủy đơn hàng');
+                    fetchData();
+                    setIsDetailModalVisible(false);
+                } catch (err) {
+                    message.error('Lỗi khi hủy đơn');
+                }
+            }
+        });
+    };
+
+    const handleMarkServed = async (orderId: number) => {
+        Modal.confirm({
+            title: 'Xác nhận hoàn thành món',
+            content: 'Bạn xác nhận đã ra hết món cho đơn hàng này?',
+            okText: 'XÁC NHẬN',
+            cancelText: 'HỦY',
+            onOk: async () => {
+                try {
+                    await api.post(`/orders/${orderId}/served`);
+                    message.success('Đã đánh dấu hoàn thành món');
+                    fetchData();
+                } catch (err) {
+                    message.error('Lỗi thao tác');
+                }
+            }
+        });
     };
 
     const handlePayment = async (orderId: number) => {
@@ -131,8 +173,8 @@ const SalesManagement: React.FC = () => {
     };
 
     const addProductToOrder = (product: any) => {
-        if (currentOrder && currentOrder.status === 'completed') {
-            return message.warning('Không thể chỉnh sửa đơn hàng đã thanh toán');
+        if (currentOrder && (currentOrder.status === 'completed' || currentOrder.status === 'cancelled')) {
+            return message.warning('Không thể chỉnh sửa đơn hàng đã khóa');
         }
         setOrderItems(prev => {
             const existing = prev.find(i => i.product_id === product.id);
@@ -149,7 +191,7 @@ const SalesManagement: React.FC = () => {
     };
 
     const removeProductFromOrder = (productId: number) => {
-        if (currentOrder && currentOrder.status === 'completed') return;
+        if (currentOrder && (currentOrder.status === 'completed' || currentOrder.status === 'cancelled')) return;
         setOrderItems(prev => prev.filter(i => i.product_id !== productId));
     };
 
@@ -164,32 +206,45 @@ const SalesManagement: React.FC = () => {
     const getStatusTag = (status: string) => {
         switch (status) {
             case 'pending': return <Tag color="gold" style={{ borderRadius: 4, fontWeight: 800, border: 'none' }}>ĐANG PHỤC VỤ</Tag>;
+            case 'served': return <Tag color="cyan" style={{ borderRadius: 4, fontWeight: 800, border: 'none', color: '#000' }}>ĐÃ RA MÓN</Tag>;
             case 'completed': return <Tag color="#52c41a" style={{ borderRadius: 4, fontWeight: 800, border: 'none', color: '#000' }}>HOÀN TẤT</Tag>;
+            case 'cancelled': return <Tag color="#ff4d4f" style={{ borderRadius: 4, fontWeight: 800, border: 'none', color: '#fff' }}>HỦY BỎ</Tag>;
             default: return <Tag color="default">{status?.toUpperCase()}</Tag>;
         }
     };
 
     return (
         <div className="sales-management animate-fade-in" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+            <div style={{ display: 'flex', flexDirection: screens.md ? 'row' : 'column', justifyContent: 'space-between', alignItems: screens.md ? 'center' : 'flex-start', marginBottom: 32, gap: 16 }}>
                 <div>
-                    <Title level={2} style={{ color: 'var(--primary-color)', margin: 0, fontStyle: 'italic', letterSpacing: -1 }}>
+                    <Title level={2} style={{ color: 'var(--primary-color)', margin: 0, fontStyle: 'italic', letterSpacing: -1, fontSize: screens.md ? 24 : 20 }}>
                         QUẢN LÝ BÁN HÀNG
                     </Title>
-                    <Text style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Theo dõi và xử lý đơn hàng theo thời gian thực</Text>
+                    <Text style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: screens.md ? 14 : 12 }}>Theo dõi và xử lý đơn hàng theo thời gian thực</Text>
                 </div>
                 <Button
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={handleAddOrder}
-                    style={{ height: 54, padding: '0 40px', fontSize: 18, fontWeight: 900, borderRadius: 8, boxShadow: '0 4px 15px rgba(250, 219, 20, 0.3)' }}
+                    style={{
+                        height: 54,
+                        padding: screens.md ? '0 40px' : '0 20px',
+                        width: screens.md ? 'auto' : '100%',
+                        fontSize: 18,
+                        fontWeight: 900,
+                        borderRadius: 8,
+                        boxShadow: '0 4px 15px rgba(250, 219, 20, 0.3)'
+                    }}
                 >
                     MỞ BÀN MỚI
                 </Button>
             </div>
 
             {loading && orders.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 100 }}><Spin size="large" tip="ĐANG ĐỒNG BỘ DỮ LIỆU..." /></div>
+                <div style={{ textAlign: 'center', padding: 100 }}>
+                    <Spin size="large" />
+                    <div style={{ marginTop: 16, color: 'var(--primary-color)', fontWeight: 700 }}>ĐANG ĐỒNG BỘ DỮ LIỆU...</div>
+                </div>
             ) : orders.length === 0 ? (
                 <div className="glass-card" style={{ padding: 80, textAlign: 'center' }}>
                     <Empty description={<span style={{ color: '#666', fontSize: 16 }}>CHƯA CÓ GIAO DỊCH</span>} />
@@ -199,17 +254,21 @@ const SalesManagement: React.FC = () => {
                     {orders.map(order => (
                         <Col xs={24} sm={12} md={8} lg={6} key={order.id}>
                             <Card
-                                className={`glass-card order-card ${order.status === 'completed' ? 'paid-card' : ''}`}
+                                className={`glass-card order-card ${(order.status === 'completed' || order.status === 'cancelled') ? 'paid-card' : ''}`}
                                 style={{
                                     background: '#141414',
                                     borderWidth: '2px',
                                     borderStyle: 'solid',
-                                    borderColor: order.status === 'pending' ? 'var(--primary-color)' : '#222',
-                                    opacity: order.status === 'completed' ? 0.6 : 1,
+                                    borderColor: order.status === 'pending' ? 'var(--primary-color)'
+                                        : order.status === 'served' ? '#13c2c2'
+                                            : order.status === 'cancelled' ? '#ff4d4f'
+                                                : '#222',
+                                    opacity: (order.status === 'completed' || order.status === 'cancelled') ? 0.55 : 1,
                                     borderRadius: 12,
                                     overflow: 'hidden'
                                 }}
-                                hoverable={order.status === 'pending'}
+                                hoverable
+                                onClick={() => handleViewDetail(order)}
                             >
                                 <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -233,7 +292,25 @@ const SalesManagement: React.FC = () => {
                                             <div style={{ fontSize: 14, color: '#fff', fontWeight: 700 }}>#{order.id?.toString().padStart(4, '0')}</div>
                                         </div>
                                     </div>
-                                    {getStatusTag(order.status)}
+                                    {order.status === 'pending' ? (
+                                        <Button
+                                            size="small"
+                                            style={{
+                                                borderRadius: 4,
+                                                fontWeight: 900,
+                                                background: '#13c2c2',
+                                                color: '#000',
+                                                border: 'none',
+                                                fontSize: 10
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleMarkServed(order.id);
+                                            }}
+                                        >
+                                            HOÀN THÀNH
+                                        </Button>
+                                    ) : getStatusTag(order.status)}
                                 </div>
 
                                 <Title level={4} style={{ color: '#fff', margin: '0 0 4px 0', textTransform: 'uppercase', fontSize: 18, fontWeight: 800 }}>
@@ -282,16 +359,28 @@ const SalesManagement: React.FC = () => {
                                         </Button>
                                     </Col>
                                     <Col span={14}>
-                                        {order.status === 'pending' ? (
+                                        {(order.status === 'pending' || order.status === 'served') ? (
                                             <Button
                                                 block
                                                 size="large"
                                                 type="primary"
-                                                icon={<CheckCircleOutlined />}
-                                                onClick={() => handlePayment(order.id)}
+                                                icon={<DollarOutlined />}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handlePayment(order.id);
+                                                }}
                                                 style={{ fontWeight: 800 }}
                                             >
                                                 THANH TOÁN
+                                            </Button>
+                                        ) : order.status === 'cancelled' ? (
+                                            <Button
+                                                block
+                                                size="large"
+                                                disabled
+                                                style={{ background: '#2a1215', color: '#ff4d4f', border: '1px solid #ff4d4f33', fontWeight: 800 }}
+                                            >
+                                                ĐÃ HỦY
                                             </Button>
                                         ) : (
                                             <Button
@@ -299,7 +388,7 @@ const SalesManagement: React.FC = () => {
                                                 size="large"
                                                 disabled
                                                 icon={<CheckCircleOutlined />}
-                                                style={{ background: '#222', color: '#555', border: 'none', fontWeight: 800 }}
+                                                style={{ background: '#162312', color: '#52c41a', border: '1px solid #52c41a33', fontWeight: 800 }}
                                             >
                                                 ĐÃ THANH TOÁN
                                             </Button>
@@ -318,15 +407,16 @@ const SalesManagement: React.FC = () => {
                 open={isAddModalVisible}
                 onCancel={() => setIsAddModalVisible(false)}
                 onOk={() => form.submit()}
-                width={1100}
+                width={screens.md ? 1100 : '100%'}
                 okText="XÁC NHẬN MỞ BÀN"
                 cancelText="HỦY"
                 className="anime-modal"
-                styles={{ body: { background: '#141414', padding: 24, borderTop: '2px solid #333' } }}
+                style={{ top: screens.md ? 100 : 0, padding: 0 }}
+                styles={{ body: { background: '#141414', padding: screens.md ? 24 : 12, borderTop: '2px solid #333' } }}
             >
                 <Form form={form} layout="vertical" onFinish={handleCreateOrder}>
-                    <Row gutter={32}>
-                        <Col span={9}>
+                    <Row gutter={[32, 24]}>
+                        <Col xs={24} lg={9}>
                             <Title level={5} style={{ color: 'var(--primary-color)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <ShoppingOutlined /> THÔNG TIN
                             </Title>
@@ -365,7 +455,9 @@ const SalesManagement: React.FC = () => {
                             </div>
                         </Col>
 
-                        <Col span={15}>
+
+
+                        <Col xs={24} lg={15}>
                             <Title level={5} style={{ color: 'var(--primary-color)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <DatabaseOutlined /> DANH SÁCH MÓN
                             </Title>
@@ -394,7 +486,7 @@ const SalesManagement: React.FC = () => {
                                     {products
                                         .filter(p => selectedCategory === null || p.category_id === selectedCategory)
                                         .map(p => (
-                                            <Col span={8} key={p.id}>
+                                            <Col xs={12} sm={8} md={6} lg={8} key={p.id}>
                                                 <Card
                                                     size="small"
                                                     hoverable
@@ -411,7 +503,7 @@ const SalesManagement: React.FC = () => {
                             </div>
 
                             <Title level={5} style={{ color: 'var(--primary-color)', marginBottom: 16 }}>GIỎ HÀNG</Title>
-                            <div style={{ background: '#000', borderRadius: 12, overflow: 'hidden', border: '1px solid #222' }}>
+                            <div style={{ background: '#000', borderRadius: 12, overflowX: 'auto', border: '1px solid #222' }}>
                                 <table style={{ width: '100%', color: '#fff' }} className="items-table">
                                     <thead style={{ background: '#141414' }}>
                                         <tr>
@@ -479,17 +571,46 @@ const SalesManagement: React.FC = () => {
                 title={<span style={{ fontStyle: 'italic', fontWeight: 900, color: 'var(--primary-color)' }}>CHI TIẾT ĐƠN HÀNG #{(currentOrder?.id || 0).toString().padStart(4, '0')}</span>}
                 open={isDetailModalVisible}
                 onCancel={() => setIsDetailModalVisible(false)}
-                footer={currentOrder?.status === 'pending' ? [
-                    <Button key="cancel" style={{ borderRadius: 4, fontWeight: 700 }} onClick={() => setIsDetailModalVisible(false)}>ĐÓNG</Button>,
-                    <Button key="pay" type="primary" style={{ borderRadius: 4, fontWeight: 900 }} icon={<CheckCircleOutlined />} onClick={() => handlePayment(currentOrder.id)}>THANH TOÁN</Button>
-                ] : [<Button key="close" style={{ borderRadius: 4, fontWeight: 700 }} onClick={() => setIsDetailModalVisible(false)}>ĐÓNG</Button>]}
-                width={750}
+
+                footer={[
+                    <Button
+                        key="close"
+                        style={{ borderRadius: 4, fontWeight: 700, marginRight: 'auto' }}
+                        onClick={() => setIsDetailModalVisible(false)}
+                    >
+                        ĐÓNG
+                    </Button>,
+                    currentOrder?.status === 'pending' && (
+                        <Button
+                            key="cancel_order"
+                            danger
+                            style={{ borderRadius: 4, fontWeight: 700 }}
+                            onClick={() => handleCancelOrder(currentOrder.id)}
+                        >
+                            HỦY ĐƠN
+                        </Button>
+                    ),
+
+                    (currentOrder?.status === 'pending' || currentOrder?.status === 'served') && (
+                        <Button
+                            key="pay"
+                            type="primary"
+                            style={{ borderRadius: 4, fontWeight: 900 }}
+                            icon={<DollarOutlined />}
+                            onClick={() => handlePayment(currentOrder.id)}
+                        >
+                            THANH TOÁN
+                        </Button>
+                    )
+                ].filter(Boolean)}
+                width={screens.md ? 750 : '100%'}
                 className="anime-modal"
-                styles={{ body: { background: '#141414', padding: 32 } }}
+                style={{ top: screens.md ? 100 : 0, padding: 0 }}
+                styles={{ body: { background: '#141414', padding: screens.md ? 32 : 16 } }}
             >
                 {currentOrder && (
                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginBottom: 40 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: screens.md ? '1fr 1fr' : '1fr', gap: screens.md ? 32 : 16, marginBottom: 40 }}>
                             <div style={{ borderLeft: '4px solid var(--primary-color)', paddingLeft: 16 }}>
                                 <div style={{ color: '#444', fontSize: 10, fontWeight: 900 }}>KHÁCH HÀNG</div>
                                 <Title level={3} style={{ color: '#fff', margin: 0, textTransform: 'uppercase' }}>{currentOrder.customer_name || 'KHÁCH VÃNG LAI'}</Title>
@@ -511,13 +632,52 @@ const SalesManagement: React.FC = () => {
                                     <th style={{ padding: 16, textAlign: 'center', color: '#444', fontSize: 10 }}>ĐVT/SL</th>
                                     <th style={{ padding: 16, textAlign: 'right', color: '#444', fontSize: 10 }}>ĐƠN GIÁ</th>
                                     <th style={{ padding: 16, textAlign: 'right', color: '#444', fontSize: 10 }}>THÀNH TIỀN</th>
+                                    {(currentOrder.status === 'pending' || currentOrder.status === 'served') && (
+                                        <th style={{ padding: 16, textAlign: 'center', color: '#444', fontSize: 10, width: 50 }}>XÓA</th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody>
                                 {currentOrder.items?.map((item: any) => (
                                     <tr key={item.id} style={{ borderBottom: '1px solid #1a1a1a' }}>
                                         <td style={{ padding: 16, fontWeight: 700 }}>{item.product?.name}</td>
-                                        <td style={{ padding: 16, textAlign: 'center', color: '#888' }}>{item.qty} {item.product?.unit?.name}</td>
+                                        <td style={{ padding: 16, textAlign: 'center', color: '#888' }}>
+                                            {(currentOrder.status === 'completed' || currentOrder.status === 'cancelled') ? (
+                                                <span>{item.qty} {item.product?.unit?.name}</span>
+                                            ) : (
+                                                <Space>
+                                                    <Button
+                                                        size="small"
+                                                        type="text"
+                                                        style={{ color: 'var(--primary-color)', fontWeight: 900, background: '#1a1a1a', border: '1px solid #333' }}
+                                                        onClick={() => {
+                                                            const newQty = Math.max(1, item.qty - 1);
+                                                            if (newQty === item.qty) return;
+                                                            api.put(`/orders/items/${item.id}`, { qty: newQty }).then(res => {
+                                                                if (res.data) {
+                                                                    setCurrentOrder(res.data);
+                                                                    fetchData();
+                                                                }
+                                                            });
+                                                        }}
+                                                    >-</Button>
+                                                    <span style={{ minWidth: 20, display: 'inline-block', fontWeight: 900, color: '#fff' }}>{item.qty}</span>
+                                                    <Button
+                                                        size="small"
+                                                        type="text"
+                                                        style={{ color: 'var(--primary-color)', fontWeight: 900, background: '#1a1a1a', border: '1px solid #333' }}
+                                                        onClick={() => {
+                                                            api.put(`/orders/items/${item.id}`, { qty: item.qty + 1 }).then(res => {
+                                                                if (res.data) {
+                                                                    setCurrentOrder(res.data);
+                                                                    fetchData();
+                                                                }
+                                                            });
+                                                        }}
+                                                    >+</Button>
+                                                </Space>
+                                            )}
+                                        </td>
                                         <td style={{ padding: 16, textAlign: 'right', color: '#888' }}>
                                             {Number(item.price_original || item.price_snapshot).toLocaleString()} ₫
                                             {item.price_original && Number(item.price_original) > Number(item.price_snapshot) && (
@@ -527,10 +687,61 @@ const SalesManagement: React.FC = () => {
                                             )}
                                         </td>
                                         <td style={{ padding: 16, textAlign: 'right', fontWeight: 800 }}>{(item.qty * Number(item.price_snapshot)).toLocaleString()} ₫</td>
+                                        {(currentOrder.status === 'pending' || currentOrder.status === 'served') && (
+                                            <td style={{ padding: 16, textAlign: 'center' }}>
+                                                <Button
+                                                    type="text"
+                                                    danger
+                                                    size="small"
+                                                    icon={<DeleteOutlined />}
+                                                    onClick={() => {
+                                                        api.put(`/orders/items/${item.id}`, { qty: 0 }).then(res => {
+                                                            if (res.data) {
+                                                                setCurrentOrder(res.data);
+                                                                fetchData();
+                                                                message.success('Đã xóa món');
+                                                            }
+                                                        });
+                                                    }}
+                                                />
+                                            </td>
+                                        )}
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
+
+                        {/* ADD ITEM SECTION - only for editable orders */}
+                        {(currentOrder.status === 'pending' || currentOrder.status === 'served') && (
+                            <div style={{ marginBottom: 32, background: '#0d0d0d', padding: 16, borderRadius: 12, border: '1px dashed #333' }}>
+                                <div style={{ color: '#555', fontSize: 10, fontWeight: 900, marginBottom: 10, letterSpacing: 1 }}>THÊM MÓN MỚI</div>
+                                <Select
+                                    showSearch
+                                    style={{ width: '100%' }}
+                                    placeholder="Tìm và chọn món để thêm..."
+                                    optionFilterProp="label"
+                                    filterOption={(input, option) =>
+                                        (option?.label as string ?? '').toLowerCase().includes(input.toLowerCase())
+                                    }
+                                    onSelect={(productId: number) => {
+                                        api.post(`/orders/${currentOrder.id}/items`, { product_id: productId, qty: 1 }).then(res => {
+                                            if (res.data) {
+                                                setCurrentOrder(res.data);
+                                                fetchData();
+                                                message.success('Đã thêm món');
+                                            }
+                                        }).catch(() => message.error('Lỗi thêm món'));
+                                    }}
+                                    value={null as any}
+                                    options={products.map((p: any) => ({
+                                        value: p.id,
+                                        label: `${p.name} — ${Number(p.promo_price || p.price).toLocaleString()}₫`
+                                    }))}
+                                    dropdownStyle={{ background: '#1a1a1a' }}
+                                />
+                            </div>
+                        )}
+
 
                         <div style={{ background: '#000', padding: 32, borderRadius: 16, border: '1px solid #222', position: 'relative', overflow: 'hidden' }}>
                             <div style={{ position: 'absolute', top: 0, right: 0, width: 100, height: 100, background: 'radial-gradient(circle at top right, rgba(250,219,20,0.05), transparent)' }}></div>
@@ -585,7 +796,7 @@ const SalesManagement: React.FC = () => {
                     color: var(--primary-color) !important;
                 }
             `}</style>
-        </div>
+        </div >
     );
 };
 

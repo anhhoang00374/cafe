@@ -15,6 +15,19 @@ const startServer = async () => {
         await sequelize.sync({ alter: false });
         console.log('Database synced.');
 
+        // Migrate orders.status ENUM to include 'served'
+        try {
+            await sequelize.query(
+                "ALTER TABLE `orders` MODIFY COLUMN `status` ENUM('pending','served','completed','cancelled') DEFAULT 'pending';"
+            );
+            console.log('Orders status ENUM updated.');
+        } catch (e: any) {
+            // Ignore if already applied or column doesn't exist yet
+            if (!e.message?.includes('Duplicate')) {
+                console.log('ENUM migration note:', e.message);
+            }
+        }
+
         // app.listen(PORT, () => {
         //     console.log(`Server is running on port ${PORT}`);
         // });

@@ -8,7 +8,7 @@ class Order extends Model {
     declare daily_seq: number;
     declare customer_name: string | null;
     declare guest_count: number;
-    declare status: 'pending' | 'completed' | 'cancelled';
+    declare status: 'pending' | 'served' | 'completed' | 'cancelled';
     declare total: number;
     declare discount: number;
     declare final_total: number;
@@ -46,7 +46,7 @@ Order.init(
             defaultValue: 1,
         },
         status: {
-            type: DataTypes.ENUM('pending', 'completed', 'cancelled'),
+            type: DataTypes.ENUM('pending', 'served', 'completed', 'cancelled'),
             defaultValue: 'pending',
         },
         total: {

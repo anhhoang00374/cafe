@@ -19,20 +19,34 @@ export class ProfitController {
             });
             res.json(cycles);
         } catch (error: any) {
-            res.status(500).json({ message: error.message });
+            console.error('Error fetching profit cycles:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name,
+                sql: error.sql
+            });
+            res.status(500).json({
+                message: error.message,
+                details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            });
         }
     }
 
     // Get single cycle details
     getCycleDetails = async (req: Request, res: Response) => {
         try {
-            const cycle = await ProfitCycle.findByPk(req.params.id);
+            const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+            const cycle = await ProfitCycle.findByPk(id);
             if (!cycle) {
                 return res.status(404).json({ message: 'Không tìm thấy chu kỳ' });
             }
             res.json(cycle);
         } catch (error: any) {
-            res.status(500).json({ message: error.message });
+            console.error('Error fetching cycle details:', error.message);
+            res.status(500).json({
+                message: error.message,
+                details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            });
         }
     }
 
@@ -176,22 +190,34 @@ export class ProfitController {
             });
 
         } catch (error: any) {
-            console.error('Profit calculation error:', error);
-            res.status(500).json({ message: error.message });
+            console.error('Profit calculation error:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            });
+            res.status(500).json({
+                message: error.message,
+                details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            });
         }
     }
 
     // Delete a cycle
     deleteCycle = async (req: Request, res: Response) => {
         try {
-            const cycle = await ProfitCycle.findByPk(req.params.id);
+            const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+            const cycle = await ProfitCycle.findByPk(id);
             if (!cycle) {
                 return res.status(404).json({ message: 'Không tìm thấy chu kỳ' });
             }
             await cycle.destroy();
             res.json({ message: 'Đã xóa chu kỳ' });
         } catch (error: any) {
-            res.status(500).json({ message: error.message });
+            console.error('Error deleting cycle:', error.message);
+            res.status(500).json({
+                message: error.message,
+                details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            });
         }
     }
 }

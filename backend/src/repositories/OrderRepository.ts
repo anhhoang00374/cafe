@@ -46,7 +46,7 @@ export class OrderRepository extends BaseRepository<Order> {
         return this.model.findAll({
             where: {
                 [Op.or]: [
-                    { status: 'pending' },
+                    { status: { [Op.in]: ['pending', 'served'] } },
                     { createdAt: { [Op.gte]: today } }
                 ]
             },
@@ -60,10 +60,10 @@ export class OrderRepository extends BaseRepository<Order> {
                 { model: Payment, as: 'payment' }
             ],
             order: [
-                // pending first, then completed/cancelled
-                [sequelize.literal("CASE WHEN `Order`.status = 'pending' THEN 0 ELSE 1 END"), 'ASC'],
-                // newest first within status group
-                ['createdAt', 'DESC']
+                // Unpaid (pending/served) first, then completed/cancelled
+                [sequelize.literal("CASE WHEN `Order`.status IN ('pending','served') THEN 0 ELSE 1 END"), 'ASC'],
+                // Within each group, oldest first
+                ['createdAt', 'ASC']
             ]
         });
     }

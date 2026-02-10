@@ -148,6 +148,34 @@ export class OrderService {
             throw error;
         }
     }
+    async markAsServed(order_id: number) {
+        const order = await orderRepository.findById(order_id);
+        if (!order) throw new Error('Order not found');
+        return order.update({ status: 'served' });
+    }
+
+    async cancelOrder(order_id: number) {
+        const transaction = await sequelize.transaction();
+        try {
+            const order = await orderRepository.findById(order_id, { transaction });
+            if (!order) throw new Error('Order not found');
+
+            await order.update({ status: 'cancelled' }, { transaction });
+
+            if (order.table_id) {
+                const table = await Table.findByPk(order.table_id, { transaction });
+                if (table) {
+                    await table.update({ status: 'available' }, { transaction });
+                }
+            }
+
+            await transaction.commit();
+            return order;
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    }
 }
 
 export default new OrderService();

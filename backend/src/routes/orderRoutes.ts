@@ -11,5 +11,7 @@ router.put('/:id', authenticate, orderController.update);
 router.post('/:id/items', authenticate, orderController.addItem);
 router.put('/items/:itemId', authenticate, orderController.updateItemQty);
 router.post('/:id/complete', authenticate, orderController.completeOrder);
+router.post('/:id/served', authenticate, orderController.markServed);
+router.post('/:id/cancel', authenticate, orderController.cancelOrder);
 
 export default router;

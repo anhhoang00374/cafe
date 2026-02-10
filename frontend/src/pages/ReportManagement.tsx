@@ -143,7 +143,7 @@ const ReportManagement: React.FC = () => {
                     <Title level={2} style={{ color: 'var(--primary-color)', margin: 0, fontStyle: 'italic', letterSpacing: -1 }}>
                         BÁO CÁO & THỐNG KÊ
                     </Title>
-                    <Text style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Phân tích hiệu quả kinh doanh chi tiết</Text>
+                    <Text style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Thống kê doanh thu từ các đơn đã thanh toán (theo thời gian thanh toán)</Text>
                 </div>
                 <Space>
                     <RangePicker
@@ -170,7 +170,7 @@ const ReportManagement: React.FC = () => {
                 <Col xs={24} sm={8}>
                     <Card className="glass-card stat-card" style={{ background: '#141414', border: '1px solid #222' }}>
                         <Statistic
-                            title={<span style={{ color: '#555', fontWeight: 800, fontSize: 12 }}>DOANH THU THỰC TẾ</span>}
+                            title={<span style={{ color: '#555', fontWeight: 800, fontSize: 12 }}>DOANH THU ĐÃ THU</span>}
                             value={data?.overview?.totalRevenue || 0}
                             precision={0}
                             valueStyle={{ color: 'var(--primary-color)', fontWeight: 900, fontSize: 28 }}
@@ -182,7 +182,7 @@ const ReportManagement: React.FC = () => {
                 <Col xs={24} sm={8}>
                     <Card className="glass-card stat-card" style={{ background: '#141414', border: '1px solid #222' }}>
                         <Statistic
-                            title={<span style={{ color: '#555', fontWeight: 800, fontSize: 12 }}>SỐ LƯỢNG ĐƠN HÀNG</span>}
+                            title={<span style={{ color: '#555', fontWeight: 800, fontSize: 12 }}>ĐƠN ĐÃ THANH TOÁN</span>}
                             value={data?.overview?.totalOrders || 0}
                             valueStyle={{ color: '#fff', fontWeight: 900, fontSize: 28 }}
                             prefix={<ShoppingOutlined />}

@@ -569,16 +569,16 @@ const DataMaster: React.FC = () => {
                         label: 'QUẢN LÝ NGUYÊN LIỆU',
                         children: <IngredientTab ingredients={ingredients} units={units} onRefresh={fetchData} />,
                     },
-                    {
-                        key: '3',
-                        label: 'QUẢN LÝ DANH MỤC',
-                        children: <CategoryTab categories={categories} onRefresh={fetchData} />,
-                    },
-                    {
-                        key: '4',
-                        label: 'QUẢN LÝ BÀN',
-                        children: <div style={{ color: '#fff', padding: 40 }}>Chức năng đang phát triển...</div>,
-                    },
+                    // {
+                    //     key: '3',
+                    //     label: 'QUẢN LÝ DANH MỤC',
+                    //     children: <CategoryTab categories={categories} onRefresh={fetchData} />,
+                    // },
+                    // {
+                    //     key: '4',
+                    //     label: 'QUẢN LÝ BÀN',
+                    //     children: <div style={{ color: '#fff', padding: 40 }}>Chức năng đang phát triển...</div>,
+                    // },
                 ]}
             />
         </div>
