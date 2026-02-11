@@ -11,6 +11,7 @@ class ProfitCycle extends Model {
     declare status: 'active' | 'closed';
     declare revenue_details: any;
     declare cost_details: any;
+    declare imported_items_snapshot: any;
 
     declare readonly createdAt: Date;
     declare readonly updatedAt: Date;
@@ -52,6 +53,10 @@ ProfitCycle.init(
             allowNull: true,
         },
         cost_details: {
+            type: DataTypes.JSON,
+            allowNull: true,
+        },
+        imported_items_snapshot: {
             type: DataTypes.JSON,
             allowNull: true,
         },

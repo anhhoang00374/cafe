@@ -132,7 +132,12 @@ export class ProfitController {
             });
 
             // ============ COST CALCULATION ============
-            // Get all import items and calculate consumption based on remaining_qty vs qty
+            // Get the last closed cycle to determine if this is first cycle or not
+            const allCycles = await ProfitCycle.findAll({
+                order: [['createdAt', 'DESC']]
+            });
+
+            // Get all import items and calculate consumption
             const importItems = await ImportItem.findAll({
                 include: [
                     { model: Ingredient, as: 'ingredient' },
@@ -142,11 +147,44 @@ export class ProfitController {
 
             let totalCost = 0;
             const costDetails: any[] = [];
+            const currentSnapshot: any[] = []; // Snapshot of current state for next cycle
+
+            // If there is a previous cycle with snapshot, use incremental calculation
+            const previousCycle = allCycles.length > 0 ? allCycles[0] : null;
+            const previousSnapshot = previousCycle?.imported_items_snapshot || null;
 
             importItems.forEach((item: any) => {
-                const consumed = Number(item.qty) - Number(item.remaining_qty);
-                if (consumed > 0) {
-                    const costForItem = consumed * Number(item.cost_price);
+                const currentRemaining = Number(item.remaining_qty);
+
+                // Create snapshot entry for current state
+                currentSnapshot.push({
+                    id: item.id,
+                    import_order_id: item.import_order_id,
+                    ingredient_id: item.ingredient_id,
+                    remaining_qty: currentRemaining
+                });
+
+                let consumedQty = 0;
+                const currentQty = Number(item.qty);
+
+                if (!previousSnapshot || previousSnapshot.length === 0) {
+                    // FIRST CYCLE: Calculate total consumption from beginning
+                    consumedQty = currentQty - currentRemaining;
+                } else {
+                    // SUBSEQUENT CYCLES: Calculate incremental consumption
+                    // consumed = (previous_remaining) - (current_remaining)
+                    const prevSnapshotItem = previousSnapshot.find((p: any) => p.id === item.id);
+                    if (prevSnapshotItem) {
+                        const previousRemaining = Number(prevSnapshotItem.remaining_qty);
+                        consumedQty = previousRemaining - currentRemaining;
+                    } else {
+                        // Item didn't exist in previous cycle, so count current consumption
+                        consumedQty = currentQty - currentRemaining;
+                    }
+                }
+
+                if (consumedQty > 0) {
+                    const costForItem = consumedQty * Number(item.cost_price);
                     totalCost += costForItem;
 
                     costDetails.push({
@@ -155,9 +193,9 @@ export class ProfitController {
                         ingredientId: item.ingredient_id,
                         ingredientName: item.ingredient?.name || 'Unknown',
                         importDate: item.import_order?.createdAt,
-                        originalQty: Number(item.qty),
-                        remainingQty: Number(item.remaining_qty),
-                        consumedQty: consumed,
+                        currentRemaining: currentRemaining,
+                        previousRemaining: previousSnapshot?.find((p: any) => p.id === item.id)?.remaining_qty || currentQty,
+                        consumedQty: consumedQty,
                         costPrice: Number(item.cost_price),
                         totalCost: costForItem
                     });
@@ -181,7 +219,8 @@ export class ProfitController {
                 },
                 cost_details: {
                     items: costDetails.sort((a, b) => b.totalCost - a.totalCost)
-                }
+                },
+                imported_items_snapshot: currentSnapshot
             });
 
             res.json({

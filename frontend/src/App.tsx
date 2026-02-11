@@ -40,7 +40,7 @@ const App = () => {
             <Route path="profits" element={<ProfitManagement />} />
           </Route>
 
-          <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+          <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard/sales" : "/login"} />} />
         </Routes>
       </Layout>
     </Router>

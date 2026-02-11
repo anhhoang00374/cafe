@@ -16,7 +16,7 @@ const Login: React.FC = () => {
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
             message.success('Chào mừng trở lại, ' + user.username);
-            navigate('/dashboard');
+            navigate('/dashboard/sales');
             window.location.reload(); // Quick refresh to update state
         } catch (error: any) {
             message.error(error.response?.data?.message || 'Đăng nhập thất bại');
@@ -36,7 +36,7 @@ const Login: React.FC = () => {
         }}>
             <Card className="glass-card" style={{ width: 400, background: '#141414' }}>
                 <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                    <h1 className="gradient-text" style={{ fontSize: 42, marginBottom: 8, letterSpacing: '-2px', fontStyle: 'italic' }}>CAFÉ POS</h1>
+                    <h1 className="gradient-text" style={{ fontSize: 42, marginBottom: 8, letterSpacing: '-2px', fontStyle: 'italic' }}>MUỐI COFFE </h1>
                     <p style={{ color: '#fadb14', fontWeight: 600, textTransform: 'uppercase' }}>Hệ thống quản lý</p>
                 </div>
 
