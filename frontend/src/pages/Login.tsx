@@ -36,7 +36,7 @@ const Login: React.FC = () => {
         }}>
             <Card className="glass-card" style={{ width: 400, background: '#141414' }}>
                 <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                    <h1 className="gradient-text" style={{ fontSize: 42, marginBottom: 8, letterSpacing: '-2px', fontStyle: 'italic' }}>MUỐI COFFE </h1>
+                    <h1 className="gradient-text" style={{ fontSize: 42, marginBottom: 8, letterSpacing: '-2px', fontStyle: 'italic' }}>MUỐI COFFEE </h1>
                     <p style={{ color: '#fadb14', fontWeight: 600, textTransform: 'uppercase' }}>Hệ thống quản lý</p>
                 </div>
 

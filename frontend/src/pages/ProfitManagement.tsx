@@ -140,7 +140,7 @@ const ProfitManagement: React.FC = () => {
                                     }}
                                 >
                                     <Row gutter={24} align="middle">
-                                        <Col span={6}>
+                                        <Col span={7}>
                                             <div style={{ color: '#666', fontSize: 12, marginBottom: 4 }}>CHU KỲ</div>
                                             <div style={{ color: '#fff', fontWeight: 600 }}>
                                                 {dayjs(cycle.start_date).format('DD/MM/YYYY HH:mm')}
@@ -150,7 +150,7 @@ const ProfitManagement: React.FC = () => {
                                                 {dayjs(cycle.end_date).format('DD/MM/YYYY HH:mm')}
                                             </div>
                                         </Col>
-                                        <Col span={5}>
+                                        <Col span={6}>
                                             <Statistic
                                                 title={<span style={{ color: '#666', fontSize: 11 }}>DOANH THU</span>}
                                                 value={Number(cycle.revenue)}
@@ -169,7 +169,7 @@ const ProfitManagement: React.FC = () => {
                                                 Chi tiết
                                             </Button>
                                         </Col>
-                                        <Col span={5}>
+                                        <Col span={6}>
                                             <Statistic
                                                 title={<span style={{ color: '#666', fontSize: 11 }}>CHI PHÍ</span>}
                                                 value={Number(cycle.cost)}
@@ -201,13 +201,13 @@ const ProfitManagement: React.FC = () => {
                                                 {isProfit ? 'CÓ LỜI' : 'THUA LỖ'}
                                             </Tag>
                                         </Col>
-                                        <Col span={3} style={{ textAlign: 'right' }}>
-                                            <Button
-                                                danger
-                                                icon={<DeleteOutlined />}
-                                                onClick={() => handleDelete(cycle.id)}
-                                            />
-                                        </Col>
+                                        {/*<Col span={3} style={{ textAlign: 'right' }}>*/}
+                                        {/*    <Button*/}
+                                        {/*        danger*/}
+                                        {/*        icon={<DeleteOutlined />}*/}
+                                        {/*        onClick={() => handleDelete(cycle.id)}*/}
+                                        {/*    />*/}
+                                        {/*</Col>*/}
                                     </Row>
                                 </Card>
                             </Col>

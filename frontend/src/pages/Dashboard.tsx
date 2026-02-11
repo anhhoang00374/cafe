@@ -94,7 +94,7 @@ const Dashboard: React.FC = () => {
                 }}
             >
                 <div style={{ padding: '32px 24px', textAlign: 'center' }}>
-                    <h2 className="gradient-text" style={{ fontSize: '32px', letterSpacing: '-2px', fontStyle: 'italic' }}>MUỐI COFFE</h2>
+                    <h2 className="gradient-text" style={{ fontSize: '32px', letterSpacing: '-2px', fontStyle: 'italic' }}>MUỐI COFFEE</h2>
                     <div style={{ height: '2px', background: 'var(--primary-color)', margin: '8px 20px' }}></div>
                 </div>
                 <Menu
